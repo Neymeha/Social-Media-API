@@ -55,6 +55,11 @@ public class JwtServiceImpl implements JwtService{
     }
 
     @Override
+    public String generateJwtRefreshToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        return buildJwtToken(extraClaims, userDetails, jwtAccessExpiration);
+    }
+
+    @Override
     public boolean isTokenValid(String jwtToken, UserDetails userDetails){ // валидация токена
         final String username = extractUsername(jwtToken); // получаем login/username - email в нашем случае
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(jwtToken)); // проверка на совпадение юзернейма из токена с юзернеймом из энтити а так же токен должен быть с не истекшим сроком

@@ -28,7 +28,6 @@ public class PostServiceImpl implements PostService {
         if(request.getTitle()==null || request.getBody()==null){
             throw new RequiredFieldsAreNotFilledException("All fields must be filled!", HttpStatus.BAD_REQUEST);
         }
-
         var user = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
         var post = Post.builder()
                         .title(request.getTitle())

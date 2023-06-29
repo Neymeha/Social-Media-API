@@ -20,6 +20,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 // класс для аутентификации
@@ -57,10 +59,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .role(Role.USER) // даем роль
                 .build(); // создаем обьект
         userRepository.save(user); // сохраняем в базу данных нашего пользователя
-        var jwtToken = jwtService.generateJwtAccessToken(user); // генерируем токен на основе полученных данных из запроса
-        var jwtRefreshToken = jwtService.generateJwtRefreshToken(user); // генерируем рефреш токен
+        Map<String, Object> userId = new HashMap<>(); // добавляем токену юзер айди для фронта
+        userId.put("userId", user.getUserId());
+        var jwtAccessToken = jwtService.generateJwtAccessToken(userId,user); // генерируем токен на основе полученных данных из запроса
+        var jwtRefreshToken = jwtService.generateJwtRefreshToken(userId,user); // генерируем рефреш токен
         return AuthenticationResponse.builder()
-                .jwtAccessToken(jwtToken)
+                .jwtAccessToken(jwtAccessToken)
                 .jwtRefreshToken(jwtRefreshToken)
                 .build(); // возвращаем наш обьект ответа аутентификации прикладывая токен
     }
@@ -81,10 +85,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 )
         ); // ниже находим пользователя в БД по уникальному эмейлу, если не найден выбрасываем Exception
         var user = userRepository.findByEmail(request.getEmail()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
-        var jwtToken = jwtService.generateJwtAccessToken(user); // генерируем токен
-        var jwtRefreshToken = jwtService.generateJwtRefreshToken(user); // генерируем рефреш токен
+        Map<String, Object> userId = new HashMap<>(); // добавляем токену юзер айди для фронта
+        userId.put("userId", user.getUserId());
+        var jwtAccessToken = jwtService.generateJwtAccessToken(userId,user); // генерируем токен на основе полученных данных из запроса
+        var jwtRefreshToken = jwtService.generateJwtRefreshToken(userId,user); // генерируем рефреш токен
         return AuthenticationResponse.builder()
-                .jwtAccessToken(jwtToken)
+                .jwtAccessToken(jwtAccessToken)
                 .jwtRefreshToken(jwtRefreshToken)
                 .build(); // возвращаем обьект ответа по аутентификации прикладывая токен
     }
@@ -104,8 +110,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new JwtException("Refresh token is invalid!", HttpStatus.NOT_ACCEPTABLE);
         }
 
-        var jwtAccessToken = jwtService.generateJwtAccessToken(user);
-        var jwtRefreshToken = jwtService.generateJwtRefreshToken(user);
+        Map<String, Object> userId = new HashMap<>(); // добавляем токену юзер айди для фронта
+        userId.put("userId", user.getUserId());
+        var jwtAccessToken = jwtService.generateJwtAccessToken(userId,user); // генерируем токен на основе полученных данных из запроса
+        var jwtRefreshToken = jwtService.generateJwtRefreshToken(userId,user); // генерируем рефреш токен
         return AuthenticationResponse.builder()
                 .jwtAccessToken(jwtAccessToken)
                 .jwtRefreshToken(jwtRefreshToken)

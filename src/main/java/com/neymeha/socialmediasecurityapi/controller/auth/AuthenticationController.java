@@ -1,6 +1,6 @@
 package com.neymeha.socialmediasecurityapi.controller.auth;
 
-import com.neymeha.socialmediasecurityapi.service.auth.AuthenticationServiceImpl;
+import com.neymeha.socialmediasecurityapi.service.auth.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthenticationController {
 
-    private final AuthenticationServiceImpl service; // добавили зависимость от нашего сервиса с реализацией логики ответов на запросы
+    private final AuthenticationService service; // добавили зависимость от нашего сервиса с реализацией логики ответов на запросы
 
     @PostMapping("/registration") // endpoint для регистрации запрашивает поля из обьекта запроса на регистрацию
     public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request){

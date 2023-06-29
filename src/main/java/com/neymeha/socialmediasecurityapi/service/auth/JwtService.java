@@ -3,8 +3,6 @@ package com.neymeha.socialmediasecurityapi.service.auth;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.security.Key;
-import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -19,4 +17,5 @@ public interface JwtService {
     Claims extractAllClaims(String jwtToken);
     String extractJwtTokenFromRequestHeader();
     String extractUsernameFromAuthJwt();
+    String generateJwtRefreshToken(Map<String, Object> extraClaims, UserDetails userDetails);
 }

@@ -18,6 +18,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter; // добавляем зависимость от нашего фильтра
     private final AuthenticationProvider authenticationProvider; // добавляем зависимость от провайдера дефолтной реализации спринга
+    private final ExceptionHandlerFilter exceptionHandlerFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain (HttpSecurity httpSecurity) throws Exception {
@@ -34,7 +35,8 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // по этому нужно сделать ее stateless, новая сессия для каждого нового запроса
                 .and()
                 .authenticationProvider(authenticationProvider) // нужно сказать спрингу какой провайдер для аутентификации мы будем использовать
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // мы хотим что бы наш фильтр спрабатывал раньше/перед тем что указан
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // мы хотим что бы наш фильтр спрабатывал раньше/перед тем что указан
+                .addFilterBefore(exceptionHandlerFilter, JwtAuthenticationFilter.class);
 
         return httpSecurity.build();
     }

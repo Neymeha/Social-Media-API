@@ -13,7 +13,7 @@ import com.neymeha.socialmediasecurityapi.customexceptions.user.UserNotFoundExce
 import com.neymeha.socialmediasecurityapi.entity.Message;
 import com.neymeha.socialmediasecurityapi.entity.MessageHistory;
 import com.neymeha.socialmediasecurityapi.entity.Status;
-import com.neymeha.socialmediasecurityapi.repository.MessageHistoryRepository;
+import com.neymeha.socialmediasecurityapi.repository.MessageRepository;
 import com.neymeha.socialmediasecurityapi.repository.UserRepository;
 import com.neymeha.socialmediasecurityapi.service.auth.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -22,16 +22,14 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Random;
 
 
 @Service
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService{
     private final UserRepository userRepository;
-    private final MessageHistoryRepository messageHistoryRepository;
+    private final MessageRepository messageRepository;
     private final JwtService jwtService;
-    private final static String absaluteFolderPath = System.getProperty("user.dir") + "/src/main/resources/static/messagehistory/";
 
     @Override
     public MessageResponse sendAndSaveMessage(MessageRequest request) {
@@ -75,6 +73,7 @@ public class MessageServiceImpl implements MessageService{
         } else {
             throw new MessageException("Something went wrong!", HttpStatus.NOT_FOUND);
         }
+        messageRepository.save(message);
         return MessageResponse.builder()
                 .message(message)
                 .build();
@@ -104,6 +103,10 @@ public class MessageServiceImpl implements MessageService{
             throw new MessageException("Something went wrong!", HttpStatus.NOT_FOUND);
         }
 
+        if (mainUser.getUserIdThatSendAMessage().contains(targetUser.getUserId())) {
+            mainUser.getUserIdThatSendAMessage().remove(targetUser.getUserId());
+        }
+        userRepository.save(mainUser);
         return HistoryResponse.builder()
                 .messageList(messageList)
                 .build();

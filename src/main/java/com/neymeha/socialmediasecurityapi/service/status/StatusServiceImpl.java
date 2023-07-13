@@ -62,7 +62,7 @@ public class StatusServiceImpl implements StatusService {
         }
         Status stsTarget = targetUser.getStatusWithUsers().get(mainUser);
         stsTarget.setFriend(true);
-        mainUser.replyFriendRequest(targetUser.getUserId());
+        mainUser.refuseFriendRequest(targetUser.getUserId());
         mainUser.addToFriendList(targetUser, stsMain);
         statusRepository.save(stsMain);
         statusRepository.save(stsTarget);
@@ -75,7 +75,7 @@ public class StatusServiceImpl implements StatusService {
     public StatusResponse friendAddRefuse(StatusRequest request){
         targetIdCheck(request.getTargetUserId());
         var user = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
-        user.replyFriendRequest(request.getTargetUserId());
+        user.refuseFriendRequest(request.getTargetUserId());
         userRepository.save(user);
         return StatusResponse.builder()
                 .build();

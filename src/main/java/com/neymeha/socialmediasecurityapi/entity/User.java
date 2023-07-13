@@ -61,7 +61,7 @@ public class User implements UserDetails {
         userIdRequestedForFriendship.add(userId);
     }
 
-    public void replyFriendRequest(long userId){
+    public void refuseFriendRequest(long userId){
         userIdRequestedForFriendship.remove(userId);
     }
 

@@ -1,5 +1,6 @@
 package com.neymeha.socialmediasecurityapi.controller.message.history;
 
+import com.neymeha.socialmediasecurityapi.entity.Message;
 import com.neymeha.socialmediasecurityapi.entity.MessageHistory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,5 +14,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HistoryResponse {
-    private List<MessageHistory.Message> messageList;
+    private List<Message> messageList;
 }

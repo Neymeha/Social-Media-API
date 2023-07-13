@@ -1,17 +1,15 @@
 package com.neymeha.socialmediasecurityapi.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-@Data
+@Setter
+@Getter
 @Builder
 @Entity
 @Table
@@ -21,16 +19,28 @@ public class MessageHistory {
     @Id
     @GeneratedValue
     private long id;
-    private String historyStorageURL;
 
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Message{
-        private String userNameFrom;
-        private String userNameTo;
-        private Timestamp sendTime;
-        private String text;
+    @OneToMany
+    @JoinColumn(name = "history_id")
+    private List<Message> messageList;
+
+    public void addMessageToHistory(Message message){
+        if (messageList==null){
+            messageList = new ArrayList<>();
+        } else {
+            messageList.add(message);
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MessageHistory history)) return false;
+        return getId() == history.getId();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId());
     }
 }

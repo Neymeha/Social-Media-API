@@ -40,7 +40,7 @@ public class PostServiceImpl implements PostService {
                 .imageURL(image.getOriginalFilename())
                 .timestamp(new Timestamp(System.currentTimeMillis()))
                 .build();
-        String absaluteFilePath = absaluteFolderPath + image.getOriginalFilename();
+        String absaluteFilePath = absaluteFolderPath + image.getOriginalFilename(); // нужно получше настроить иерархию файловой системы по папкам а то будет жесткий бардак
         try {
             image.transferTo(new File(absaluteFilePath));
         } catch (IOException e) {
@@ -90,7 +90,7 @@ public class PostServiceImpl implements PostService {
         if (image!=null || !image.isEmpty()) {
             String absaluteFilePath = absaluteFolderPath + image.getOriginalFilename();
             try {
-                image.transferTo(new File(absaluteFilePath));
+                image.transferTo(new File(absaluteFilePath));// нужно получше настроить иерархию файловой системы по папкам а то будет жесткий бардак
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

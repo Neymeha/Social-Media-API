@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 public class HistoryController {
     private final MessageService service;
     @GetMapping("/withFriend")
-    public ResponseEntity<HistoryResponse> getChatHistory(@RequestBody HistoryRequest request){
+    public ResponseEntity<HistoryResponse> getChatHistory(@RequestBody HistoryLoadRequest request){
         return new ResponseEntity(service.getHistoryWithFriend(request), HttpStatus.OK);
     }
 }

@@ -34,6 +34,8 @@ public class User implements UserDetails {
 
     private List<Long> userIdRequestedForFriendship;
 
+    private List<Long> userIdThatSendAMessage;
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private List<Post> posts = new ArrayList<>();
@@ -43,9 +45,16 @@ public class User implements UserDetails {
     private Map<User, Status> statusWithUsers = new HashMap<>();
 
     @ManyToMany(cascade = CascadeType.PERSIST)
-    private Map<User, MessageHistory> messageHistories = new HashMap<>();
+    private Map<User,MessageHistory> messageHistories = new HashMap<>();
 
     public void recieveFriendRequest(long userId){
+        if(userIdRequestedForFriendship ==null){
+            userIdRequestedForFriendship = new ArrayList<>();
+        }
+        userIdRequestedForFriendship.add(userId);
+    }
+
+    public void recieveMessageNotification(long userId){
         if(userIdRequestedForFriendship ==null){
             userIdRequestedForFriendship = new ArrayList<>();
         }
@@ -123,12 +132,8 @@ public class User implements UserDetails {
         return "User{" +
                 "userId=" + userId +
                 ", name='" + name + '\'' +
-                ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
                 ", role=" + role +
-                ", userIdRequestedForFrandship=" + userIdRequestedForFriendship +
-                ", userPosts=" + posts +
-                ", statusWithUsers=" + statusWithUsers +
                 '}';
     }
 }

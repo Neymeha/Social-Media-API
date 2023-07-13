@@ -4,14 +4,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Objects;
 
-@Data
+@Getter
+@Setter
 @Builder
 @Entity
 @Table
@@ -38,5 +36,14 @@ public class Status {
     @Override
     public int hashCode() {
         return Objects.hash(getStatusId(), isFriend(), isSubscription());
+    }
+
+    @Override
+    public String toString() {
+        return "Status{" +
+                "statusId=" + statusId +
+                ", friend=" + friend +
+                ", subscription=" + subscription +
+                '}';
     }
 }

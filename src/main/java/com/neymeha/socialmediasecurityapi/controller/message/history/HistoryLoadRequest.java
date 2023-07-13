@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class HistoryRequest {
+public class HistoryLoadRequest {
     private long targetUserId;
 }

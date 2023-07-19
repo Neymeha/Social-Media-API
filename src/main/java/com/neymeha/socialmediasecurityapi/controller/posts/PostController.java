@@ -23,9 +23,9 @@ public class PostController {
 
     @PutMapping()
     public ResponseEntity<PostResponse> refreshUserPost(@RequestParam long postId,
-                                                        @RequestParam String title,
-                                                        @RequestParam String body,
-                                                        @RequestParam MultipartFile image){
+                                                        @RequestParam(required = false) String title,
+                                                        @RequestParam(required = false) String body,
+                                                        @RequestParam(required = false) MultipartFile image){
         return new ResponseEntity(service.updatePost(postId, title, body, image), HttpStatus.OK);
     }
 

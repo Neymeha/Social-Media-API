@@ -1,6 +1,6 @@
 package com.neymeha.socialmediasecurityapi.config;
 
-import com.neymeha.socialmediasecurityapi.customexceptions.ApiError;
+import com.neymeha.socialmediasecurityapi.customexceptions.ApiFilterException;
 import com.neymeha.socialmediasecurityapi.customexceptions.jwt.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -31,9 +31,9 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         response.setStatus(status.value());
         response.setContentType("application/json");
         // A class used for errors
-        ApiError apiError = new ApiError(status, ex);
+        ApiFilterException apiFilterException = new ApiFilterException(status, ex);
         try {
-            String json = apiError.convertToJson();
+            String json = apiFilterException.convertToJson();
             System.out.println(json);
             response.getWriter().write(json);
         } catch (IOException e) {

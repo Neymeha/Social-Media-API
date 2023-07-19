@@ -16,7 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +33,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse createPost(String title, String body, MultipartFile image){
 
-        if(title==null || body==null || image==null || title.isEmpty() || body.isEmpty() || image.isEmpty()){
+        if(title==null || body==null || image==null){
             throw new RequiredFieldsAreNotFilledException("All fields must be filled!", HttpStatus.BAD_REQUEST);
         }
         String email = jwtService.extractUsernameFromAuthJwt();
@@ -37,17 +41,23 @@ public class PostServiceImpl implements PostService {
         var post = Post.builder()
                 .title(title)
                 .body(body)
-                .imageURL(image.getOriginalFilename())
+                .image(image.getOriginalFilename())
                 .timestamp(new Timestamp(System.currentTimeMillis()))
                 .build();
-        String absaluteFilePath = absaluteFolderPath + image.getOriginalFilename(); // нужно получше настроить иерархию файловой системы по папкам а то будет жесткий бардак
+        user.createPost(post);
+        postRepository.save(post);
+        String path = absaluteFolderPath+user.getUserId()+"/"+post.getPostId()+"/";
+        try {
+            Files.createDirectories(Paths.get(path));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String absaluteFilePath = path + image.getOriginalFilename(); // нужно получше настроить иерархию файловой системы по папкам а то будет жесткий бардак
         try {
             image.transferTo(new File(absaluteFilePath));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        user.createPost(post);
-        postRepository.save(post);
         return PostResponse.builder().post(post).build();
     }
 
@@ -63,9 +73,11 @@ public class PostServiceImpl implements PostService {
                 .findAny()
                 .filter(p -> p.getPostId() == postId)
                 .orElseThrow(() -> new PostNotFoundException("Post not found", HttpStatus.NOT_FOUND));
-        String imageUrl = post.getImageURL();
-        File image = new File(absaluteFolderPath+imageUrl);
+        String imageUrl = post.getImage();
+        File image = new File(absaluteFolderPath + user.getUserId()+ "/"+post.getPostId()+"/" +imageUrl);
+        File directoryPost = new File(absaluteFolderPath + user.getUserId()+ "/"+post.getPostId());
         image.delete();
+        directoryPost.delete();
         user.deletePost(post);
         postRepository.delete(post);
         return PostResponse.builder().post(post).build();
@@ -77,41 +89,39 @@ public class PostServiceImpl implements PostService {
         if (postId<1) {
             throw new RequestException("Post id could not be less than 1", HttpStatus.BAD_REQUEST);
         }
-        if(title==null || body==null || title.isEmpty() || body.isEmpty()){
-            throw new RequiredFieldsAreNotFilledException("Title and body of the Post can not be empty or null", HttpStatus.BAD_REQUEST);
+        if(title==null && body==null && image==null){
+            throw new RequiredFieldsAreNotFilledException("Nothing to change", HttpStatus.BAD_REQUEST);
         }
-
         var user = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
         var post = user.getPosts().stream()
                 .findAny()
                 .filter(p -> p.getPostId() == postId)
                 .orElseThrow(() -> new PostNotFoundException("Post not found!", HttpStatus.NOT_FOUND));
         String imageUrl;
-        if (image!=null || !image.isEmpty()) {
-            String absaluteFilePath = absaluteFolderPath + image.getOriginalFilename();
+        if (image!=null && !image.isEmpty()) {
+            String absaluteFilePath = absaluteFolderPath + user.getUserId()+ "/"+post.getPostId()+"/" + image.getOriginalFilename();
             try {
                 image.transferTo(new File(absaluteFilePath));// нужно получше настроить иерархию файловой системы по папкам а то будет жесткий бардак
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             imageUrl = image.getOriginalFilename();
-            String previousImageUrl = post.getImageURL();
-            File previousImage = new File(absaluteFolderPath+previousImageUrl);
+            String previousImageUrl = post.getImage();
+            File previousImage = new File(absaluteFolderPath + user.getUserId()+ "/"+post.getPostId()+"/" +previousImageUrl);
             previousImage.delete();
         } else {
-            imageUrl = post.getImageURL();
+            imageUrl = post.getImage();
         }
         post.updatePost(title, body, imageUrl);
         postRepository.save(post);
         return PostResponse.builder().post(post).build();
     }
 
-    @Override
+    @Override // НАДО ПЕРЕРАБОТАТЬ что бы выдавал с картинками хм
     public PostListResponse readUserPostList(long userId){
         if(userId<1){
             throw new RequestException("User id could not be less than 1", HttpStatus.BAD_REQUEST);
         }
-
         return PostListResponse.builder()
                 .postList(userRepository
                         .findById(userId)

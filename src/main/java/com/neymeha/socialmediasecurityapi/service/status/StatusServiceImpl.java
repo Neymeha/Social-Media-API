@@ -4,6 +4,7 @@ import com.neymeha.socialmediasecurityapi.controller.status.StatusRequest;
 import com.neymeha.socialmediasecurityapi.controller.status.StatusResponse;
 import com.neymeha.socialmediasecurityapi.customexceptions.request.RequestException;
 import com.neymeha.socialmediasecurityapi.customexceptions.request.StatusRequestAlreadyExistsException;
+import com.neymeha.socialmediasecurityapi.customexceptions.status.StatusException;
 import com.neymeha.socialmediasecurityapi.customexceptions.user.UserNotFoundException;
 import com.neymeha.socialmediasecurityapi.entity.Status;
 import com.neymeha.socialmediasecurityapi.repository.UserRepository;
@@ -52,6 +53,9 @@ public class StatusServiceImpl implements StatusService {
     public StatusResponse friendAddConfirm(StatusRequest request){
         targetIdCheck(request.getTargetUserId());
         var mainUser = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
+        if (request.getTargetUserId()==mainUser.getUserId()){
+            throw new RequestException("Target id is the same as main user id! Check Token or Target Id", HttpStatus.BAD_REQUEST);
+        }
         var targetUser = userRepository.findById(request.getTargetUserId()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
         Status stsMain = mainUser.getStatusWithUsers().get(targetUser);
         if (stsMain==null){
@@ -61,6 +65,9 @@ public class StatusServiceImpl implements StatusService {
                     .build();
         }
         Status stsTarget = targetUser.getStatusWithUsers().get(mainUser);
+        if (stsTarget==null){
+            throw new StatusException("That user did not send a request for friendship!", HttpStatus.BAD_REQUEST);
+        }
         stsTarget.setFriend(true);
         mainUser.refuseFriendRequest(targetUser.getUserId());
         mainUser.addToFriendList(targetUser, stsMain);
@@ -75,6 +82,15 @@ public class StatusServiceImpl implements StatusService {
     public StatusResponse friendAddRefuse(StatusRequest request){
         targetIdCheck(request.getTargetUserId());
         var user = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
+        if (request.getTargetUserId()==user.getUserId()){
+            throw new RequestException("Target id is the same as main user id! Check Token or Target Id", HttpStatus.BAD_REQUEST);
+        }
+        if (user.getUserIdRequestedForFriendship()==null) {
+            throw new RequestException("No Users requested for friendship", HttpStatus.BAD_REQUEST);
+        }
+        if (!user.getUserIdRequestedForFriendship().contains(request.getTargetUserId())){
+            throw new RequestException("Target User did not request for friendship!", HttpStatus.BAD_REQUEST);
+        }
         user.refuseFriendRequest(request.getTargetUserId());
         userRepository.save(user);
         return StatusResponse.builder()
@@ -85,6 +101,9 @@ public class StatusServiceImpl implements StatusService {
     public StatusResponse friendDelete(StatusRequest request){
         targetIdCheck(request.getTargetUserId());
         var mainUser = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
+        if (request.getTargetUserId()==mainUser.getUserId()){
+            throw new RequestException("Target id is the same as main user id! Check Token or Target Id", HttpStatus.BAD_REQUEST);
+        }
         var targetUser = userRepository.findById(request.getTargetUserId()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
         Status stsMain = mainUser.getStatusWithUsers().get(targetUser);
         Status stsTarget = targetUser.getStatusWithUsers().get(mainUser);

@@ -24,7 +24,7 @@ public class StatusController {
 
     @GetMapping("/friends")
     public ResponseEntity<StatusResponse> refuseFriend(@RequestBody StatusRequest request){
-        return new ResponseEntity(service.friendAddRefuse(request), HttpStatus.OK);
+        return new ResponseEntity(service.friendAddRefuse(request), HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("/friends")

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class ApiError {
+public class ApiFilterException {
 
     private HttpStatus status;
 
@@ -25,22 +25,22 @@ public class ApiError {
     private String message;
     private String debugMessage;
 
-    private ApiError() {
+    private ApiFilterException() {
         timestamp = LocalDateTime.now();
     }
-    public ApiError(HttpStatus status) {
+    public ApiFilterException(HttpStatus status) {
         this();
         this.status = status;
     }
 
-    public ApiError(HttpStatus status, Throwable ex) {
+    public ApiFilterException(HttpStatus status, Throwable ex) {
         this();
         this.status = status;
         this.message = "Unexpected error";
         this.debugMessage = ex.getLocalizedMessage();
     }
 
-    public ApiError(HttpStatus status, String message, Throwable ex) {
+    public ApiFilterException(HttpStatus status, String message, Throwable ex) {
         this();
         this.status = status;
         this.message = message;

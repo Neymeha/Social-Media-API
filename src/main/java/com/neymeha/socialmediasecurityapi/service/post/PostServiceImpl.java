@@ -11,17 +11,23 @@ import com.neymeha.socialmediasecurityapi.repository.UserRepository;
 import com.neymeha.socialmediasecurityapi.service.auth.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 
+
+// способ хранение неподходит, нужно обеспечить выгрузку картинок отдельно от постов а фронт должен получать только
+// юрл уже готовой картинки для ее загрузки или какой либо уникальный айдишник
+// так же мне не нравится момент проверки поиска поста чисто по айди, тут есть скрытая проблема если вдруг
+// юзер сможет нажать удалить пост на чужом посте он удалит свой если у него есть тот же айди, надо подумать
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -36,12 +42,15 @@ public class PostServiceImpl implements PostService {
         if(title==null || body==null || image==null){
             throw new RequiredFieldsAreNotFilledException("All fields must be filled!", HttpStatus.BAD_REQUEST);
         }
+        String type = image.getOriginalFilename().substring(image.getOriginalFilename().lastIndexOf(".")+1);
+        if (!type.equals("gif") && !type.equals("jpeg") && !type.equals("png") && !type.equals("jpg")) {
+            throw new RequestException("Image should be gif, png or jpeg, jpg!", HttpStatus.BAD_REQUEST);
+        }
         String email = jwtService.extractUsernameFromAuthJwt();
         var user = userRepository.findByEmail(email).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
         var post = Post.builder()
                 .title(title)
                 .body(body)
-                .image(image.getOriginalFilename())
                 .timestamp(new Timestamp(System.currentTimeMillis()))
                 .build();
         user.createPost(post);
@@ -58,10 +67,12 @@ public class PostServiceImpl implements PostService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        post.setImage(user.getUserId()+"/"+post.getPostId()+"/"+image.getOriginalFilename());
+        postRepository.save(post);
         return PostResponse.builder().post(post).build();
     }
 
-    @Override
+    @Override // не находит посты
     public PostResponse deletePost(long postId){
 
         if (postId<1) {
@@ -70,11 +81,11 @@ public class PostServiceImpl implements PostService {
 
         var user = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
         var post = user.getPosts().stream()
-                .findAny()
                 .filter(p -> p.getPostId() == postId)
+                .findAny()
                 .orElseThrow(() -> new PostNotFoundException("Post not found", HttpStatus.NOT_FOUND));
         String imageUrl = post.getImage();
-        File image = new File(absaluteFolderPath + user.getUserId()+ "/"+post.getPostId()+"/" +imageUrl);
+        File image = new File(absaluteFolderPath + imageUrl);
         File directoryPost = new File(absaluteFolderPath + user.getUserId()+ "/"+post.getPostId());
         image.delete();
         directoryPost.delete();
@@ -98,16 +109,20 @@ public class PostServiceImpl implements PostService {
                 .filter(p -> p.getPostId() == postId)
                 .orElseThrow(() -> new PostNotFoundException("Post not found!", HttpStatus.NOT_FOUND));
         String imageUrl;
-        if (image!=null && !image.isEmpty()) {
+        String type = image.getOriginalFilename().substring(image.getOriginalFilename().lastIndexOf(".")+1);
+        if (!type.equals("gif") && !type.equals("jpeg") && !type.equals("png") && !type.equals("jpg")) {
+            throw new RequestException("Image should be gif, png or jpeg, jpg!", HttpStatus.BAD_REQUEST);
+        }
+        if (!image.isEmpty()) {
             String absaluteFilePath = absaluteFolderPath + user.getUserId()+ "/"+post.getPostId()+"/" + image.getOriginalFilename();
             try {
                 image.transferTo(new File(absaluteFilePath));// нужно получше настроить иерархию файловой системы по папкам а то будет жесткий бардак
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            imageUrl = image.getOriginalFilename();
+            imageUrl = user.getUserId()+"/"+post.getPostId()+"/"+ image.getOriginalFilename();
             String previousImageUrl = post.getImage();
-            File previousImage = new File(absaluteFolderPath + user.getUserId()+ "/"+post.getPostId()+"/" +previousImageUrl);
+            File previousImage = new File(absaluteFolderPath+previousImageUrl);
             previousImage.delete();
         } else {
             imageUrl = post.getImage();
@@ -117,16 +132,31 @@ public class PostServiceImpl implements PostService {
         return PostResponse.builder().post(post).build();
     }
 
-    @Override // НАДО ПЕРЕРАБОТАТЬ что бы выдавал с картинками хм
-    public PostListResponse readUserPostList(long userId){
+    @Override
+    public PostListResponse readUserPostList(long userId) {
         if(userId<1){
             throw new RequestException("User id could not be less than 1", HttpStatus.BAD_REQUEST);
         }
+
         return PostListResponse.builder()
                 .postList(userRepository
                         .findById(userId)
                         .orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND))
                         .getPosts())
                 .build();
+    }
+
+    @Override
+    public byte[] downloadPostImage(String imageURL) {
+        if (imageURL==null || imageURL.isEmpty()) {
+            throw new RequestException("imageURL can not be null or empty", HttpStatus.BAD_REQUEST);
+        }
+        byte[] image;
+        try {
+             image = Files.readAllBytes(new File(absaluteFolderPath+imageURL).toPath());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return image;
     }
 }

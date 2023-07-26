@@ -27,6 +27,7 @@ public class MessageHistory {
     public void addMessageToHistory(Message message){
         if (messageList==null){
             messageList = new ArrayList<>();
+            messageList.add(message);
         } else {
             messageList.add(message);
         }

@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/social/media/api/v1/message")
+@RequestMapping("/social/media/api/v1/messages")
 @RequiredArgsConstructor
 public class MessageController {
     private final MessageService service;

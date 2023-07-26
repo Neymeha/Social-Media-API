@@ -3,9 +3,12 @@ package com.neymeha.socialmediasecurityapi.controller.posts;
 import com.neymeha.socialmediasecurityapi.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/social/media/api/v1/posts")
@@ -37,5 +40,24 @@ public class PostController {
     @GetMapping()
     public ResponseEntity<PostListResponse> readUserPostList(@RequestParam long userId){
         return new ResponseEntity(service.readUserPostList(userId), HttpStatus.OK);
+    }
+
+    @GetMapping("/images")
+    public ResponseEntity<?> downloadPostImage(@RequestParam String imageURL) {
+        byte[] image = service.downloadPostImage(imageURL);
+        String type = imageURL.substring(imageURL.lastIndexOf(".")+1);
+        if (type.equals("png")){
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(image);
+        } else if (type.equals("jpeg") || type.equals("jpg")) {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(image);
+        } else {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.IMAGE_GIF)
+                    .body(image);
+        }
     }
 }

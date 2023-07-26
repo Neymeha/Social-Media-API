@@ -50,15 +50,20 @@ public class User implements UserDetails {
     public void recieveFriendRequest(long userId){
         if(userIdRequestedForFriendship ==null){
             userIdRequestedForFriendship = new ArrayList<>();
+            userIdRequestedForFriendship.add(userId);
+        } else if (!userIdRequestedForFriendship.contains(userId)){
+            userIdRequestedForFriendship.add(userId);
         }
-        userIdRequestedForFriendship.add(userId);
+
     }
 
     public void recieveMessageNotification(long userId){
-        if(userIdRequestedForFriendship ==null){
-            userIdRequestedForFriendship = new ArrayList<>();
+        if(userIdThatSendAMessage ==null){
+            userIdThatSendAMessage = new ArrayList<>();
+            userIdThatSendAMessage.add(userId);
+        } else if (!userIdThatSendAMessage.contains(userId)) {
+            userIdThatSendAMessage.add(userId);
         }
-        userIdRequestedForFriendship.add(userId);
     }
 
     public void refuseFriendRequest(long userId){

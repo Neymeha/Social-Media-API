@@ -42,10 +42,14 @@ public class MessageServiceImpl implements MessageService{
         var mainUser = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("Main user not found in DB", HttpStatus.NOT_FOUND));
         var targetUser = userRepository.findById(request.getTargetUserId()).orElseThrow(()->new UserNotFoundException("Target user not found in DB", HttpStatus.NOT_FOUND));
 
+        if (request.getTargetUserId() == mainUser.getUserId()) {
+            throw new RequestException("You can not send messages to yourself!", HttpStatus.BAD_REQUEST);
+        }
+
         Status mainSts = mainUser.getStatusWithUsers().get(targetUser);
         Status targetSts = targetUser.getStatusWithUsers().get(mainUser);
 
-        if (!mainSts.isFriend() && !targetSts.isFriend()) {
+        if ((mainSts==null || targetSts==null)||(!mainSts.isFriend() && !targetSts.isFriend())) {
             throw new StatusException("You are not friends with that user", HttpStatus.BAD_REQUEST);
         }
 
@@ -60,19 +64,17 @@ public class MessageServiceImpl implements MessageService{
                 .build();
         if (mainHistory==null && targetHistory==null) {
             history = new MessageHistory();
-            history.addMessageToHistory(message);
             mainUser.getMessageHistories().put(targetUser, history);
             targetUser.getMessageHistories().put(mainUser, history);
-            targetUser.recieveMessageNotification(mainUser.getUserId());
         } else if (mainHistory==null || targetHistory==null){
             throw new MessageException("Message history not found or broken, something went wrong!", HttpStatus.NOT_FOUND);
-        } if (mainHistory.equals(targetHistory)) {
+        } else if (mainHistory.equals(targetHistory)) {
             history = mainHistory;
-            history.addMessageToHistory(message);
-            targetUser.recieveMessageNotification(mainUser.getUserId());
         } else {
             throw new MessageException("Something went wrong!", HttpStatus.NOT_FOUND);
         }
+        history.addMessageToHistory(message);
+        targetUser.recieveMessageNotification(mainUser.getUserId());
         messageRepository.save(message);
         return MessageResponse.builder()
                 .message(message)
@@ -88,6 +90,10 @@ public class MessageServiceImpl implements MessageService{
 
         var mainUser = userRepository.findByEmail(jwtService.extractUsernameFromAuthJwt()).orElseThrow(()->new UserNotFoundException("User not found in DB!", HttpStatus.NOT_FOUND));
         var targetUser = userRepository.findById(request.getTargetUserId()).orElseThrow(()->new UserNotFoundException("Target user not found in DB!", HttpStatus.NOT_FOUND));
+
+        if (request.getTargetUserId() == mainUser.getUserId()) {
+            throw new RequestException("You can not read message history with yourself!", HttpStatus.BAD_REQUEST);
+        }
 
         MessageHistory mainHistory = mainUser.getMessageHistories().get(targetUser);
         MessageHistory targetHistory = targetUser.getMessageHistories().get(mainUser);

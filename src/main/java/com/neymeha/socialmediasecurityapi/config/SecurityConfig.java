@@ -25,11 +25,30 @@ public class SecurityConfig {
         httpSecurity
                 .csrf() // отключаем аутентификацию csrf
                 .disable()
-                .authorizeHttpRequests() // команда для дальнейшего списка endpoint
-                .requestMatchers("/social/media/api/v1/auth/**") // список endpoint
-                .permitAll() // разрешить доступ для списка выше
-                .anyRequest() // все другие запросы
+                .authorizeRequests() // команда для дальнейшего списка endpoint
+//                .requestMatchers("/social/media/api/v1/auth/**") // список endpoint // такой код не подошел
+//                .permitAll() // разрешить доступ для списка выше // такой код не подошел
+//                .requestMatchers("/social/media/api/v1/**") // такой код не подошел
+                .requestMatchers("/social/media/api/v1/feed")
                 .authenticated() // запрос аутентификации
+                .requestMatchers("/social/media/api/v1/feed/**")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/posts")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/posts/**")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/messages")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/messages/**")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/status")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/status/**")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/users")
+                .authenticated()
+                .requestMatchers("/social/media/api/v1/users/**")
+                .authenticated()
                 .and()
                 .sessionManagement() // поскольку мы не хотим хранить аутентификацию так как для каждого запроса она понадобися
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // по этому нужно сделать ее stateless, новая сессия для каждого нового запроса
@@ -37,7 +56,6 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider) // нужно сказать спрингу какой провайдер для аутентификации мы будем использовать
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // мы хотим что бы наш фильтр спрабатывал раньше/перед тем что указан
                 .addFilterBefore(exceptionHandlerFilter, JwtAuthenticationFilter.class);
-
         return httpSecurity.build();
     }
 }

@@ -1,11 +1,13 @@
 package com.neymeha.socialmediasecurityapi.config;
 
+import com.neymeha.socialmediasecurityapi.customexceptions.jwt.JwtException;
 import com.neymeha.socialmediasecurityapi.service.auth.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,8 +38,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter { // клас�
         final String userEmail; // сюда положим Логин(в нашем случае мыло) для проверки есть ли такой пользователь.
         // далее реализация кода проверки на наличие токена
         if (authHeader == null || !authHeader.startsWith("Bearer ")) { // если токена нет, или токен не начинается с ключевого слова (для чистого токена)
-            filterChain.doFilter(request, response); // проверка не пройдена - передаем дальше
-            return; // и закрываем метод так как дальнейший код для этого случая не подходит
+            throw new JwtException("No Token, no access!", HttpStatus.FORBIDDEN);
+//            filterChain.doFilter(request, response); // проверка не пройдена - передаем дальше // код не подошел для меня
+//            return; // и закрываем метод так как дальнейший код для этого случая не подходит // код не подошел для меня
         }
         jwtToken = authHeader.substring(7); // токен есть в наличии и он верный, достаем его (он начинается с 7ой позиции, после "Bearer ")
         userEmail = jwtService.extractUsername(jwtToken); // достаем логин (эмейл) из токена с помощью класса с функционалом для манипулирования токеном
